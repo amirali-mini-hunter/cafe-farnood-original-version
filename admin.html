@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل مدیریت - کافه فرنود</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="header-content">
+                <h1 class="header-title">
+                    <span class="cafe-icon">☕</span>
+                    پنل مدیریت کافه فرنود
+                </h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary">خروج</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Products List Section -->
+            <section class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">لیست محصولات فعلی</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-primary">تازه‌سازی</button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>نام محصول</th>
+                                <th>قیمت</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-table-body">
+                            <!-- محصولات به صورت داینامیک اضافه می‌شوند -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Add New Product Section -->
+            <section class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">افزودن محصول جدید</h2>
+                </div>
+                
+                <form class="admin-form" action="#" method="POST">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="product-name" class="form-label">نام محصول</label>
+                            <input 
+                                type="text" 
+                                id="product-name" 
+                                name="product-name" 
+                                class="form-input" 
+                                placeholder="نام محصول را وارد کنید"
+                                required
+                            >
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="product-price" class="form-label">قیمت (تومان)</label>
+                            <input 
+                                type="number" 
+                                id="product-price" 
+                                name="product-price" 
+                                class="form-input" 
+                                placeholder="قیمت را وارد کنید"
+                                min="0"
+                                required
+                            >
+                        </div>
+                        
+                        <div class="form-group form-group-full">
+                            <label for="product-description" class="form-label">توضیحات کوتاه</label>
+                            <textarea 
+                                id="product-description" 
+                                name="product-description" 
+                                class="form-textarea" 
+                                placeholder="توضیحات محصول را وارد کنید"
+                                rows="4"
+                                required
+                            ></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="product-category" class="form-label">دسته‌بندی</label>
+                            <select id="product-category" name="product-category" class="form-select" required>
+                                <option value="">دسته‌بندی را انتخاب کنید</option>
+                                <option value="coffee">قهوه</option>
+                                <option value="tea">چای</option>
+                                <option value="dessert">دسر</option>
+                                <option value="snack">تنقلات</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="product-status" class="form-label">وضعیت</label>
+                            <select id="product-status" name="product-status" class="form-select" required>
+                                <option value="active">فعال</option>
+                                <option value="inactive">غیرفعال</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">افزودن محصول</button>
+                        <button type="reset" class="btn btn-secondary">پاک کردن</button>
+                    </div>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // تابع برای بارگذاری محصولات از API
+        async function loadProducts() {
+            try {
+                const response = await fetch('http://localhost:5000/api/products');
+                if (!response.ok) {
+                    throw new Error('خطا در دریافت محصولات');
+                }
+                const products = await response.json();
+                const tableBody = document.getElementById('products-table-body');
+                tableBody.innerHTML = '';
+
+                products.forEach(product => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${product.name}</td>
+                        <td>${product.price}</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-edit" disabled>ویرایش</button>
+                            <button class="btn btn-delete" data-id="${product.id}">حذف</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                // فعال‌سازی دکمه‌های حذف
+                document.querySelectorAll('.btn-delete').forEach(btn => {
+                    btn.addEventListener('click', async function() {
+                        if (!confirm('آیا مطمئن هستید که می‌خواهید این محصول را حذف کنید؟')) return;
+                        const id = this.getAttribute('data-id');
+                        try {
+                            const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+                                method: 'DELETE'
+                            });
+                            let resultText = await res.text();
+                            let result;
+                            try { result = JSON.parse(resultText); } catch { result = { message: resultText || '' }; }
+                            if (res.ok) {
+                                alert('محصول با موفقیت حذف شد!');
+                                loadProducts();
+                            } else {
+                                alert(result.message || `خطا در حذف محصول (status ${res.status})`);
+                            }
+                        } catch (err) {
+                            alert('خطا در ارتباط با سرور');
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('خطا در بارگذاری محصولات:', error);
+                alert('خطا در بارگذاری محصولات. لطفاً دوباره تلاش کنید.');
+            }
+        }
+
+        // هندل کردن ارسال فرم افزودن محصول
+        document.querySelector('.admin-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('product-name').value;
+            const price = document.getElementById('product-price').value;
+            const description = document.getElementById('product-description').value;
+
+            try {
+                const res = await fetch('http://localhost:5000/api/products', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name, price, description })
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    alert('محصول با موفقیت اضافه شد!');
+                    this.reset();
+                    loadProducts(); // لیست را به‌روز کن
+                } else {
+                    alert(result.message || 'خطا در افزودن محصول');
+                }
+            } catch (err) {
+                alert('خطا در ارتباط با سرور');
+            }
+        });
+
+        // بارگذاری محصولات به محض بارگذاری صفحه
+        document.addEventListener('DOMContentLoaded', loadProducts);
+    </script>
+</body>
+</html> 

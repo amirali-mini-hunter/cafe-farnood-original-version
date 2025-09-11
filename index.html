@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>کافه فرنود</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Vazirmatn', sans-serif;
+        background-image: url('https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=1920&q=80');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        color: #e7e5e4; /* stone-200 */
+      }
+      .login-button {
+        background-color: #f59e0b; /* Corresponds to Tailwind's amber-500 */
+        color: #1c1917; /* Corresponds to Tailwind's stone-900 */
+        font-weight: 700; /* bold */
+        padding: 0.5rem 1.5rem; /* py-2 px-6 */
+        border-radius: 0.5rem; /* rounded-lg */
+        text-decoration: none;
+        transition: background-color 0.3s ease-in-out;
+        white-space: nowrap; /* Prevent breaking line on small screens */
+      }
+      .login-button:hover {
+        background-color: #fbbf24; /* Corresponds to Tailwind's amber-400 */
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.1/",
+    "react": "https://esm.sh/react@^19.1.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.1/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="min-h-screen">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

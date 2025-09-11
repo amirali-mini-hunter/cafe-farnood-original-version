@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>داشبورد کاربری - کافه فرنود</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="dashboard-style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <h1 class="header-title">
+                        <span class="cafe-icon">☕</span>
+                        کافه فرنود
+                    </h1>
+                    <p class="header-subtitle">داشبورد کاربری</p>
+                </div>
+                <div class="header-right">
+                    <div class="user-info">
+                        <span class="user-greeting">خوش آمدید</span>
+                        <span class="user-name">علی احمدی</span>
+                    </div>
+                    <button class="btn btn-secondary">خروج</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Loyalty Points Section -->
+            <section class="content-section loyalty-section">
+                <div class="section-header">
+                    <h2 class="section-title">امتیاز وفاداری شما</h2>
+                    <div class="points-display">
+                        <div class="points-circle">
+                            <span class="points-number">۱۲</span>
+                            <span class="points-label">امتیاز</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="loyalty-info">
+                    <div class="info-card">
+                        <div class="info-icon">🎁</div>
+                        <div class="info-content">
+                            <h3>سطح فعلی</h3>
+                            <p>برنزی</p>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-icon">⭐</div>
+                        <div class="info-content">
+                            <h3>امتیاز بعدی</h3>
+                            <p>۸ امتیاز تا نقره‌ای</p>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-icon">🏆</div>
+                        <div class="info-content">
+                            <h3>تخفیف فعلی</h3>
+                            <p>۵٪</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Enter Loyalty Code Section -->
+            <section class="content-section code-section">
+                <div class="section-header">
+                    <h2 class="section-title">ثبت کد خرید جدید</h2>
+                </div>
+                
+                <form class="loyalty-form" action="#" method="POST">
+                    <div class="form-group">
+                        <label for="loyalty-code" class="form-label">کد وفاداری خود را وارد کنید</label>
+                        <div class="input-wrapper">
+                            <input 
+                                type="text" 
+                                id="loyalty-code" 
+                                name="loyalty-code" 
+                                class="form-input" 
+                                placeholder="مثال: FRN-2024-001"
+                                required
+                                maxlength="20"
+                            >
+                            <div class="input-icon">🎫</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">ثبت کد</button>
+                    </div>
+                </form>
+
+                <div class="help-text">
+                    <div class="help-icon">💡</div>
+                    <p>بعد از هر خرید، کد وفاداری را از صندوق‌دار دریافت و در این قسمت وارد کنید.</p>
+                </div>
+            </section>
+
+            <!-- Recent Activity Section -->
+            <section class="content-section activity-section">
+                <div class="section-header">
+                    <h2 class="section-title">فعالیت‌های اخیر</h2>
+                </div>
+                
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <div class="activity-icon">☕</div>
+                        <div class="activity-content">
+                            <h4>خرید لاته آرت</h4>
+                            <p>۲ روز پیش - +۲ امتیاز</p>
+                        </div>
+                        <div class="activity-points">+۲</div>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon">🍰</div>
+                        <div class="activity-content">
+                            <h4>خرید کیک شکلاتی</h4>
+                            <p>۱ هفته پیش - +۱ امتیاز</p>
+                        </div>
+                        <div class="activity-points">+۱</div>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon">🎁</div>
+                        <div class="activity-content">
+                            <h4>استفاده از تخفیف</h4>
+                            <p>۲ هفته پیش - ۱۰٪ تخفیف</p>
+                        </div>
+                        <div class="activity-discount">۱۰٪</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Form handling
+        document.querySelector('.loyalty-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const code = document.getElementById('loyalty-code').value;
+            
+            if (code.trim() === '') {
+                alert('لطفاً کد وفاداری را وارد کنید');
+                return;
+            }
+            
+            // Simulate code validation
+            if (code.startsWith('FRN-')) {
+                alert('کد وفاداری با موفقیت ثبت شد! +۲ امتیاز به حساب شما اضافه شد.');
+                document.getElementById('loyalty-code').value = '';
+                
+                // Update points (demo)
+                const pointsElement = document.querySelector('.points-number');
+                const currentPoints = parseInt(pointsElement.textContent);
+                pointsElement.textContent = currentPoints + 2;
+            } else {
+                alert('کد وفاداری نامعتبر است. لطفاً کد صحیح را وارد کنید.');
+            }
+        });
+
+        // Add some interactivity to info cards
+        document.querySelectorAll('.info-card').forEach(card => {
+            card.addEventListener('click', function() {
+                this.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 200);
+            });
+        });
+    </script>
+</body>
+</html> 
