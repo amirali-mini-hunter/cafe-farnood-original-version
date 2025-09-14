@@ -126,6 +126,12 @@
     </div>
 
     <script>
+        // تابع برای تبدیل عدد به فارسی
+        function toPersianNumber(num) {
+            if (typeof num !== 'string' && typeof num !== 'number') return num;
+            return num.toString().replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+        }
+
         // تابع برای بارگذاری محصولات از API
         async function loadProducts() {
             try {
@@ -138,19 +144,39 @@
                 tableBody.innerHTML = '';
 
                 products.forEach(product => {
+                    const cleanPrice = product.price.replace(/ تومان/g, '').replace(/ /g, '');
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${product.name}</td>
-                        <td>${product.price}</td>
+                        <td>${toPersianNumber(cleanPrice)} تومان</td>
                         <td class="action-buttons">
-                            <button class="btn btn-edit" disabled>ویرایش</button>
+                            <button class="btn btn-edit" data-id="${product.id}">ویرایش</button>
                             <button class="btn btn-delete" data-id="${product.id}">حذف</button>
                         </td>
                     `;
                     tableBody.appendChild(row);
                 });
 
-                // فعال‌سازی دکمه‌های حذف
+                // فعال‌سازی دکمه‌های ویرایش و حذف
+                document.querySelectorAll('.btn-edit').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        // پیدا کردن محصول از لیست
+                        const product = products.find(p => String(p.id) === String(id));
+                        if (!product) {
+                            alert('محصول یافت نشد.');
+                            return;
+                        }
+                        // پر کردن فرم با اطلاعات محصول
+                        document.getElementById('product-name').value = product.name;
+                        document.getElementById('product-price').value = product.price.replace(/[^0-9.-]+/g, '') || product.price;
+                        document.getElementById('product-description').value = product.description;
+                        // اضافه کردن یک hidden field برای نگهداری id و تغییر دکمه افزودن به بروزرسانی
+                        document.querySelector('.admin-form').setAttribute('data-edit-id', id);
+                        document.querySelector('.admin-form .btn-success').textContent = 'بروزرسانی محصول';
+                    });
+                });
+
                 document.querySelectorAll('.btn-delete').forEach(btn => {
                     btn.addEventListener('click', async function() {
                         if (!confirm('آیا مطمئن هستید که می‌خواهید این محصول را حذف کنید؟')) return;
@@ -179,30 +205,54 @@
             }
         }
 
-        // هندل کردن ارسال فرم افزودن محصول
+        // هندل کردن ارسال فرم افزودن/ویرایش محصول
         document.querySelector('.admin-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const name = document.getElementById('product-name').value;
             const price = document.getElementById('product-price').value;
             const description = document.getElementById('product-description').value;
 
+            const editId = this.getAttribute('data-edit-id');
+            const isEdit = !!editId;
+
             try {
-                const res = await fetch('http://localhost:5000/api/products', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ name, price, description })
-                });
-                const result = await res.json();
+                let res;
+                if (isEdit) {
+                    // ارسال PUT برای بروزرسانی
+                    res = await fetch(`http://localhost:5000/api/products/${editId}`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ name, price, description })
+                    });
+                } else {
+                    res = await fetch('http://localhost:5000/api/products', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ name, price, description })
+                    });
+                }
+
+                const resultText = await res.text();
+                let result;
+                try { result = JSON.parse(resultText); } catch { result = { message: resultText || '' }; }
                 if (res.ok) {
-                    alert('محصول با موفقیت اضافه شد!');
+                    alert(isEdit ? 'محصول با موفقیت به‌روز شد!' : 'محصول با موفقیت اضافه شد!');
                     this.reset();
+                    this.removeAttribute('data-edit-id');
+                    document.querySelector('.admin-form .btn-success').textContent = 'افزودن محصول';
                     loadProducts(); // لیست را به‌روز کن
                 } else {
-                    alert(result.message || 'خطا در افزودن محصول');
+                    alert(result.message || `خطا در عملیات (status ${res.status})`);
                 }
             } catch (err) {
                 alert('خطا در ارتباط با سرور');
             }
+        });
+
+        // هندل کردن دکمه ریست برای پاک کردن حالت ویرایش
+        document.querySelector('.admin-form').addEventListener('reset', function() {
+            this.removeAttribute('data-edit-id');
+            document.querySelector('.admin-form .btn-success').textContent = 'افزودن محصول';
         });
 
         // بارگذاری محصولات به محض بارگذاری صفحه
