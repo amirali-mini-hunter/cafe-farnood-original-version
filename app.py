@@ -69,6 +69,7 @@ class User(db.Model):
             'id': self.id,
             'username': self.username,
             'email': self.email
+            , 'has_password': bool(self.password_hash)
         }
 
 

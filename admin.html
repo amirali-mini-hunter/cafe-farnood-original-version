@@ -349,7 +349,7 @@
                 users.forEach(u => {
                     const tr = document.createElement('tr');
                     // show whether password exists but mask it
-                    const pwPresent = u.password_hash ? '●●●●●●' : '(ندارد)';
+                    const pwPresent = u.has_password ? '●●●●●●' : '(ندارد)';
                     tr.innerHTML = `
                         <td>${u.id}</td>
                         <td>${u.username}</td>
