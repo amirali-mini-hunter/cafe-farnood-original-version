@@ -86,6 +86,38 @@ def get_users():
     return jsonify([u.to_dict() for u in users])
 
 
+@app.route('/api/users/<int:user_id>/reset', methods=['POST', 'OPTIONS'])
+def reset_user_password(user_id):
+    if request.method == 'OPTIONS':
+        origin = request.headers.get('Origin', '*')
+        resp = app.make_response(('', 204))
+        resp.headers['Access-Control-Allow-Origin'] = origin
+        resp.headers['Vary'] = 'Origin'
+        resp.headers['Access-Control-Allow-Methods'] = 'GET,POST,PUT,DELETE,OPTIONS'
+        resp.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        return resp
+
+    data = request.get_json() or {}
+    new_password = data.get('password')
+    if not new_password:
+        return jsonify({'message': 'رمز جدید ارسال نشده است.'}), 400
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'کاربر پیدا نشد.'}), 404
+
+    try:
+        user.password_hash = generate_password_hash(new_password)
+        db.session.commit()
+        resp = jsonify({'message': 'رمز با موفقیت بروزرسانی شد.'})
+        origin = request.headers.get('Origin', '*')
+        resp.headers['Access-Control-Allow-Origin'] = origin
+        resp.headers['Vary'] = 'Origin'
+        return resp, 200
+    except Exception as e:
+        return jsonify({'message': 'خطا در بروزرسانی رمز', 'error': str(e)}), 500
+
+
 # API endpoint برای حذف کاربر
 @app.route('/api/users/<int:user_id>', methods=['DELETE', 'OPTIONS'])
 def delete_user(user_id):

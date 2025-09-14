@@ -64,6 +64,7 @@
                                 <th>آیدی</th>
                                 <th>نام کاربری</th>
                                 <th>ایمیل</th>
+                                <th>رمز (مخفی)</th>
                                 <th>عملیات</th>
                             </tr>
                         </thead>
@@ -347,11 +348,15 @@
                 tbody.innerHTML = '';
                 users.forEach(u => {
                     const tr = document.createElement('tr');
+                    // show whether password exists but mask it
+                    const pwPresent = u.password_hash ? '●●●●●●' : '(ندارد)';
                     tr.innerHTML = `
                         <td>${u.id}</td>
                         <td>${u.username}</td>
                         <td>${u.email}</td>
+                        <td>${pwPresent}</td>
                         <td class="action-buttons">
+                            <button class="btn btn-reset-pw" data-id="${u.id}">تغییر رمز</button>
                             <button class="btn btn-delete-user" data-id="${u.id}">حذف</button>
                         </td>
                     `;
@@ -372,6 +377,32 @@
                                 let json;
                                 try { json = JSON.parse(text); } catch { json = { message: text } }
                                 alert(json.message || 'خطا در حذف کاربر');
+                            }
+                        } catch (err) {
+                            alert('خطا در ارتباط با سرور');
+                        }
+                    });
+                });
+                // reset password buttons
+                document.querySelectorAll('.btn-reset-pw').forEach(btn => {
+                    btn.addEventListener('click', async function() {
+                        const id = this.getAttribute('data-id');
+                        const newpw = prompt('رمز جدید را وارد کنید:');
+                        if (!newpw) return alert('رمز جدید وارد نشد.');
+                        try {
+                            const r = await fetch(`http://localhost:5000/api/users/${id}/reset`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ password: newpw })
+                            });
+                            if (r.ok) {
+                                alert('رمز با موفقیت بروزرسانی شد');
+                                loadUsers();
+                            } else {
+                                let text = await r.text();
+                                let json;
+                                try { json = JSON.parse(text); } catch { json = { message: text } }
+                                alert(json.message || 'خطا در بروزرسانی رمز');
                             }
                         } catch (err) {
                             alert('خطا در ارتباط با سرور');
