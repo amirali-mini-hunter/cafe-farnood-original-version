@@ -110,7 +110,8 @@ def reset_user_password(user_id):
     try:
         user.password_hash = generate_password_hash(new_password)
         db.session.commit()
-        resp = jsonify({'message': 'رمز با موفقیت بروزرسانی شد.'})
+        # For admin convenience return the new password once in response only
+        resp = jsonify({'message': 'رمز با موفقیت بروزرسانی شد.', 'new_password': new_password})
         origin = request.headers.get('Origin', '*')
         resp.headers['Access-Control-Allow-Origin'] = origin
         resp.headers['Vary'] = 'Origin'

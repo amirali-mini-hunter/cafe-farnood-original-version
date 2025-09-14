@@ -354,8 +354,9 @@
                         <td>${u.id}</td>
                         <td>${u.username}</td>
                         <td>${u.email}</td>
-                        <td>${pwPresent}</td>
+                        <td class="pw-cell">${pwPresent}</td>
                         <td class="action-buttons">
+                            <button class="btn btn-show-pw" data-id="${u.id}">نمایش</button>
                             <button class="btn btn-reset-pw" data-id="${u.id}">تغییر رمز</button>
                             <button class="btn btn-delete-user" data-id="${u.id}">حذف</button>
                         </td>
@@ -395,18 +396,49 @@
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ password: newpw })
                             });
+                            const text = await r.text();
+                            let json;
+                            try { json = JSON.parse(text); } catch { json = { message: text } }
                             if (r.ok) {
                                 alert('رمز با موفقیت بروزرسانی شد');
+                                // reveal new password in the table briefly
+                                const row = this.closest('tr');
+                                if (row) {
+                                    const cell = row.querySelector('.pw-cell');
+                                    if (cell) {
+                                        cell.textContent = json.new_password || '●●●●●●';
+                                        setTimeout(() => { cell.textContent = '●●●●●●'; }, 7000);
+                                    }
+                                }
                                 loadUsers();
                             } else {
-                                let text = await r.text();
-                                let json;
-                                try { json = JSON.parse(text); } catch { json = { message: text } }
                                 alert(json.message || 'خطا در بروزرسانی رمز');
                             }
                         } catch (err) {
                             alert('خطا در ارتباط با سرور');
                         }
+                    });
+                });
+
+                // show password button: fetch fresh password display from server if needed
+                document.querySelectorAll('.btn-show-pw').forEach(btn => {
+                    btn.addEventListener('click', async function() {
+                        const id = this.getAttribute('data-id');
+                        // for security, do not fetch password from server normally; instead show placeholder
+                        const row = this.closest('tr');
+                        if (!row) return;
+                        const cell = row.querySelector('.pw-cell');
+                        if (!cell) return;
+                        // toggle temporary reveal of masked value for 5s if password exists
+                        if (cell.textContent && cell.textContent.indexOf('●') === -1 && cell.textContent !== '(ندارد)') {
+                            // already showing plaintext
+                            cell.textContent = '●●●●●●';
+                            return;
+                        }
+                        if (cell.textContent === '(ندارد)') return alert('برای این کاربر رمز وجود ندارد.');
+                        // reveal masked briefly (we don't have plaintext) — simply flash the dots brighter
+                        cell.style.filter = 'brightness(1.4)';
+                        setTimeout(() => { cell.style.filter = ''; }, 3000);
                     });
                 });
             } catch (err) {
