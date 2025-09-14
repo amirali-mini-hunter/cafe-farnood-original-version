@@ -16,7 +16,21 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle login logic here
-    console.log('Login attempt:', formData);
+    fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: formData.username, password: formData.password })
+    })
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          alert(data.message || 'خطا در ورود');
+          return;
+        }
+        // success
+        window.location.href = '/dashboard.html';
+      })
+      .catch(() => alert('خطا در اتصال به سرور'));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

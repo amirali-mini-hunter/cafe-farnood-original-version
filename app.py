@@ -1,6 +1,7 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
@@ -61,6 +62,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(200), nullable=True)
 
     def to_dict(self):
         return {
@@ -113,6 +115,60 @@ def delete_user(user_id):
         resp.headers['Access-Control-Allow-Origin'] = origin
         resp.headers['Vary'] = 'Origin'
         return resp, 500
+
+
+@app.route('/api/register', methods=['POST'])
+def register_user():
+    data = request.get_json() or {}
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+    if not username or not email or not password:
+        return jsonify({'message': 'تمام فیلدها الزامی است.'}), 400
+    # uniqueness checks
+    if User.query.filter((User.username == username) | (User.email == email)).first():
+        return jsonify({'message': 'نام کاربری یا ایمیل تکراری است.'}), 400
+    try:
+        hashed = generate_password_hash(password)
+        u = User(username=username, email=email, password_hash=hashed)
+        db.session.add(u)
+        db.session.commit()
+        return jsonify({'message': 'ثبت نام با موفقیت انجام شد.', 'user': u.to_dict()}), 201
+    except Exception as e:
+        return jsonify({'message': 'خطا در ثبت نام', 'error': str(e)}), 500
+
+
+@app.route('/api/login', methods=['POST', 'OPTIONS'])
+def login_user():
+    if request.method == 'OPTIONS':
+        origin = request.headers.get('Origin', '*')
+        resp = app.make_response(('', 204))
+        resp.headers['Access-Control-Allow-Origin'] = origin
+        resp.headers['Vary'] = 'Origin'
+        resp.headers['Access-Control-Allow-Methods'] = 'GET,POST,PUT,DELETE,OPTIONS'
+        resp.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        return resp
+
+    data = request.get_json() or {}
+    username = data.get('username')
+    password = data.get('password')
+    if not username or not password:
+        return jsonify({'message': 'نام کاربری و رمز عبور الزامی است.'}), 400
+
+    # allow login by username or email
+    user = User.query.filter((User.username == username) | (User.email == username)).first()
+    if not user:
+        return jsonify({'message': 'نام کاربری یا ایمیل یافت نشد.'}), 401
+
+    if not user.password_hash or not check_password_hash(user.password_hash, password):
+        return jsonify({'message': 'نام کاربری یا رمز عبور اشتباه است.'}), 401
+
+    # success
+    resp = jsonify({'message': 'ورود موفق', 'user': user.to_dict()})
+    origin = request.headers.get('Origin', '*')
+    resp.headers['Access-Control-Allow-Origin'] = origin
+    resp.headers['Vary'] = 'Origin'
+    return resp, 200
 
 # API endpoint برای افزودن محصول جدید
 @app.route('/api/products', methods=['POST'])
