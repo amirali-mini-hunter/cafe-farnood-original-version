@@ -7,6 +7,26 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  // تبدیل ارقام انگلیسی به فارسی
+  const toPersianNumber = (num: string) => {
+    return num.replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
+  };
+
+  // قالب‌بندی قیمت: دریافت رشته یا عدد، فرمت هزارگان، تبدیل به ارقام فارسی و افزودن 'تومان'
+  const formatPrice = (price: string | number | undefined) => {
+    if (price === undefined || price === null) return '';
+    let s = String(price);
+    // حذف همه چیز به جز ارقام فارسی/لاتین
+    const cleaned = s.replace(/[^0-9۰-۹]/g, '');
+    if (!cleaned) return '';
+    // تبدیل فارسی به انگلیسی برای فرمت
+    const eng = cleaned.replace(/[۰-۹]/g, (d) => String('0123456789'['۰۱۲۳۴۵۶۷۸۹'.indexOf(d)]));
+    // فرمت با جداکننده هزارگان انگلیسی
+    const withCommas = Number(eng).toLocaleString('en-US');
+    // تبدیل ارقام به فارسی
+    const persian = toPersianNumber(withCommas);
+    return persian + ' تومان';
+  };
   return (
     <div className="product-card bg-[#2a1a0e] rounded-2xl overflow-hidden shadow-lg border border-amber-700/40 transition-all duration-300 ease-in-out transform hover:scale-[1.03] hover:shadow-2xl hover:shadow-amber-500/30 flex flex-col">
       <div className="relative h-48 w-full">
@@ -33,7 +53,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
 
         <button className="mt-4 w-full bg-amber-500 text-stone-900 font-bold py-2 px-4 rounded-lg hover:bg-amber-400 transition-colors duration-300">
-          {product.price}
+          {formatPrice(product.price)}
         </button>
       </div>
     </div>

@@ -74,12 +74,12 @@
                         <div class="form-group">
                             <label for="product-price" class="form-label">قیمت (تومان)</label>
                             <input 
-                                type="number" 
+                                type="text" 
                                 id="product-price" 
                                 name="product-price" 
                                 class="form-input" 
                                 placeholder="قیمت را وارد کنید"
-                                min="0"
+                                inputmode="numeric"
                                 required
                             >
                         </div>
@@ -132,6 +132,38 @@
             return num.toString().replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
         }
 
+        // تابع برای تبدیل ارقام فارسی به انگلیسی
+        function persianToEnglishDigits(str) {
+            if (!str) return '';
+            return str.replace(/[۰-۹]/g, d => '0123456789'['۰۱۲۳۴۵۶۷۸۹'.indexOf(d)]);
+        }
+
+        // تابع برای افزودن جداکننده هزارگان و تبدیل به فارسی برای نمایش
+        function formatPriceForDisplay(value) {
+            if (value === null || value === undefined) return '';
+            // پاکسازی: نگه داشتن فقط ارقام (فارسی یا لاتین)
+            let cleaned = String(value).replace(/[^0-9۰-۹]/g, '');
+            // تبدیل فارسی به انگلیسی برای پردازش
+            const eng = persianToEnglishDigits(cleaned);
+            if (!eng) return '';
+            // فرمت با کاما برای هزارگان (انگلیسی)
+            const withCommas = eng.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            // تبدیل ارقام به فارسی و بازگرداندن
+            return toPersianNumber(withCommas);
+        }
+
+        // پاکسازی مقدار نمایش داده شده برای ارسال به سرور: تبدیل به ارقام انگلیسی بدون جداکننده
+        function cleanPriceForSubmit(displayValue) {
+            if (!displayValue) return '';
+            // حذف "تومان" و فاصله
+            let v = String(displayValue).replace(/تومان/g, '').replace(/\s/g, '');
+            // تبدیل ارقام فارسی به انگلیسی
+            v = persianToEnglishDigits(v);
+            // حذف کاما
+            v = v.replace(/,/g, '');
+            return v;
+        }
+
         // تابع برای بارگذاری محصولات از API
         async function loadProducts() {
             try {
@@ -144,11 +176,11 @@
                 tableBody.innerHTML = '';
 
                 products.forEach(product => {
-                    const cleanPrice = product.price.replace(/ تومان/g, '').replace(/ /g, '');
+                    const cleanPrice = formatPriceForDisplay(product.price);
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${product.name}</td>
-                        <td>${toPersianNumber(cleanPrice)} تومان</td>
+                        <td>${cleanPrice} تومان</td>
                         <td class="action-buttons">
                             <button class="btn btn-edit" data-id="${product.id}">ویرایش</button>
                             <button class="btn btn-delete" data-id="${product.id}">حذف</button>
@@ -169,7 +201,8 @@
                         }
                         // پر کردن فرم با اطلاعات محصول
                         document.getElementById('product-name').value = product.name;
-                        document.getElementById('product-price').value = product.price.replace(/[^0-9.-]+/g, '') || product.price;
+                        // مقدار قیمت را به فرمت نمایش تبدیل کنیم
+                        document.getElementById('product-price').value = formatPriceForDisplay(product.price) + ' تومان';
                         document.getElementById('product-description').value = product.description;
                         // اضافه کردن یک hidden field برای نگهداری id و تغییر دکمه افزودن به بروزرسانی
                         document.querySelector('.admin-form').setAttribute('data-edit-id', id);
@@ -209,7 +242,8 @@
         document.querySelector('.admin-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const name = document.getElementById('product-name').value;
-            const price = document.getElementById('product-price').value;
+            const priceRaw = document.getElementById('product-price').value;
+            const price = cleanPriceForSubmit(priceRaw);
             const description = document.getElementById('product-description').value;
 
             const editId = this.getAttribute('data-edit-id');
@@ -253,6 +287,25 @@
         document.querySelector('.admin-form').addEventListener('reset', function() {
             this.removeAttribute('data-edit-id');
             document.querySelector('.admin-form .btn-success').textContent = 'افزودن محصول';
+        });
+
+        // فرمت زنده ورودی قیمت: تبدیل لاتین->فارسی، افزودن تومان در انتها
+        const priceInput = document.getElementById('product-price');
+        priceInput.addEventListener('input', function(e) {
+            const caret = this.selectionStart;
+            let val = this.value;
+            // حذف "تومان" برای پردازش
+            val = val.replace(/تومان/g, '').trim();
+            // حذف کاراکترهای غیر عددی به جز کاما و نقطه
+            // اجازه کاما برای جداکننده هزارگان
+            val = val.replace(/[^0-9,۰-۹]/g, '');
+            // تبدیل فارسی به انگلیسی، سپس فرمت هزارگان، سپس به فارسی
+            const eng = persianToEnglishDigits(val);
+            const withCommas = eng.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            const displayed = toPersianNumber(withCommas);
+            this.value = displayed ? (displayed + ' تومان') : '';
+            // سعی برای حفظ caret نزدیک موقعیت قبلی
+            try { this.setSelectionRange(Math.max(0, Math.min(this.value.length - 6, caret)), Math.max(0, Math.min(this.value.length - 6, caret))); } catch (err) {}
         });
 
         // بارگذاری محصولات به محض بارگذاری صفحه
