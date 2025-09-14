@@ -34,8 +34,12 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
     }
     
     if (Object.keys(newErrors).length === 0) {
+      const BACKEND = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
+        ? 'http://127.0.0.1:5000'
+        : '';
+
       // POST to backend register endpoint
-      fetch('/api/register', {
+      fetch(`${BACKEND}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -51,7 +55,10 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
             setErrors({ form: data.message || 'خطا در ثبت نام' });
             return;
           }
-          // success: redirect to dashboard.html
+          // success: store minimal session and redirect to dashboard
+          try {
+            localStorage.setItem('user', JSON.stringify(data.user || {}));
+          } catch (e) {}
           window.location.href = '/dashboard.html';
         })
         .catch((err) => {
