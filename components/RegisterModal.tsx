@@ -39,6 +39,9 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
         : '';
 
       // POST to backend register endpoint
+      // clear previous form error
+      setErrors({});
+
       fetch(`${BACKEND}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -53,16 +56,16 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
           if (!res.ok) {
             // show server-side message
             setErrors({ form: data.message || 'خطا در ثبت نام' });
+            console.error('register failed', res.status, data);
             return;
           }
           // success: store minimal session and redirect to dashboard
-          try {
-            localStorage.setItem('user', JSON.stringify(data.user || {}));
-          } catch (e) {}
+          try { localStorage.setItem('user', JSON.stringify(data.user || {})); } catch (e) {}
           window.location.href = '/dashboard.html';
         })
         .catch((err) => {
           setErrors({ form: 'خطا در اتصال به سرور' });
+          console.error('register network error', err);
         });
     } else {
       setErrors(newErrors);
@@ -219,6 +222,10 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
               )}
             </div>
           </div>
+
+          {errors.form && (
+            <p className="text-red-400 text-sm text-center">{errors.form}</p>
+          )}
 
           <button
             type="submit"
