@@ -34,8 +34,29 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
     }
     
     if (Object.keys(newErrors).length === 0) {
-      // Handle registration logic here
-      console.log('Register attempt:', formData);
+      // POST to backend register endpoint
+      fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password
+        })
+      })
+        .then(async (res) => {
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            // show server-side message
+            setErrors({ form: data.message || 'خطا در ثبت نام' });
+            return;
+          }
+          // success: redirect to dashboard.html
+          window.location.href = '/dashboard.html';
+        })
+        .catch((err) => {
+          setErrors({ form: 'خطا در اتصال به سرور' });
+        });
     } else {
       setErrors(newErrors);
     }
