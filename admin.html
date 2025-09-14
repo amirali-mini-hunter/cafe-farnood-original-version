@@ -401,16 +401,25 @@
                             try { json = JSON.parse(text); } catch { json = { message: text } }
                             if (r.ok) {
                                 alert('رمز با موفقیت بروزرسانی شد');
-                                // reveal new password in the table briefly
+                                // reveal new password in the table briefly and refresh after timeout
                                 const row = this.closest('tr');
                                 if (row) {
                                     const cell = row.querySelector('.pw-cell');
                                     if (cell) {
                                         cell.textContent = json.new_password || '●●●●●●';
-                                        setTimeout(() => { cell.textContent = '●●●●●●'; }, 7000);
+                                        setTimeout(() => {
+                                            cell.textContent = '●●●●●●';
+                                            // refresh list after the reveal period so the UI stays consistent
+                                            loadUsers();
+                                        }, 7000);
+                                    } else {
+                                        // fallback: refresh after timeout if cell missing
+                                        setTimeout(loadUsers, 7000);
                                     }
+                                } else {
+                                    // fallback: refresh after timeout
+                                    setTimeout(loadUsers, 7000);
                                 }
-                                loadUsers();
                             } else {
                                 alert(json.message || 'خطا در بروزرسانی رمز');
                             }
