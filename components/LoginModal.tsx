@@ -12,11 +12,16 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
     username: '',
     password: ''
   });
+  const [formError, setFormError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle login logic here
-    fetch('/api/login', {
+    // Use explicit backend URL in development to avoid Vite proxy issues
+    const BACKEND = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
+      ? 'http://127.0.0.1:5000'
+      : '';
+    fetch(`${BACKEND}/api/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: formData.username, password: formData.password })
@@ -24,13 +29,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
       .then(async (res) => {
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          alert(data.message || 'خطا در ورود');
+          setFormError(data.message || 'خطا در ورود');
           return;
         }
         // success
         window.location.href = '/dashboard.html';
       })
-      .catch(() => alert('خطا در اتصال به سرور'));
+      .catch(() => setFormError('خطا در اتصال به سرور'));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,6 +101,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
               />
             </div>
           </div>
+
+          {formError && (
+            <p className="text-red-400 text-sm text-center">{formError}</p>
+          )}
 
           <button
             type="submit"
