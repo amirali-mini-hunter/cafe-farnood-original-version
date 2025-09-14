@@ -56,11 +56,63 @@ class Product(db.Model):
         }
 
 
+# تعریف مدل User برای مدیریت کاربران در پنل ادمین
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'email': self.email
+        }
+
+
 # API endpoint برای دریافت لیست محصولات
 @app.route('/api/products', methods=['GET'])
 def get_products():
     products = Product.query.all()
     return jsonify([product.to_dict() for product in products])
+
+
+# API endpoint برای دریافت لیست کاربران
+@app.route('/api/users', methods=['GET'])
+def get_users():
+    users = User.query.all()
+    return jsonify([u.to_dict() for u in users])
+
+
+# API endpoint برای حذف کاربر
+@app.route('/api/users/<int:user_id>', methods=['DELETE', 'OPTIONS'])
+def delete_user(user_id):
+    if request.method == 'OPTIONS':
+        origin = request.headers.get('Origin', '*')
+        resp = app.make_response(('', 204))
+        resp.headers['Access-Control-Allow-Origin'] = origin
+        resp.headers['Vary'] = 'Origin'
+        resp.headers['Access-Control-Allow-Methods'] = 'GET,POST,DELETE,OPTIONS'
+        resp.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        return resp
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'کاربر پیدا نشد.'}), 404
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        resp = jsonify({'message': 'کاربر با موفقیت حذف شد.'})
+        origin = request.headers.get('Origin', '*')
+        resp.headers['Access-Control-Allow-Origin'] = origin
+        resp.headers['Vary'] = 'Origin'
+        return resp, 200
+    except Exception as e:
+        resp = jsonify({'message': 'خطا در حذف کاربر', 'error': str(e)})
+        origin = request.headers.get('Origin', '*')
+        resp.headers['Access-Control-Allow-Origin'] = origin
+        resp.headers['Vary'] = 'Origin'
+        return resp, 500
 
 # API endpoint برای افزودن محصول جدید
 @app.route('/api/products', methods=['POST'])

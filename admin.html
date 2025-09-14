@@ -51,6 +51,29 @@
                 </div>
             </section>
 
+            <!-- Users Management Section -->
+            <section class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">کاربران</h2>
+                </div>
+
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>آیدی</th>
+                                <th>نام کاربری</th>
+                                <th>ایمیل</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <!-- کاربران به صورت داینامیک اضافه می‌شوند -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
             <!-- Add New Product Section -->
             <section class="content-section">
                 <div class="section-header">
@@ -308,8 +331,57 @@
             try { this.setSelectionRange(Math.max(0, Math.min(this.value.length - 6, caret)), Math.max(0, Math.min(this.value.length - 6, caret))); } catch (err) {}
         });
 
-        // بارگذاری محصولات به محض بارگذاری صفحه
-        document.addEventListener('DOMContentLoaded', loadProducts);
+        // بارگذاری محصولات و کاربران به محض بارگذاری صفحه
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProducts();
+            loadUsers();
+        });
+
+        // بارگذاری لیست کاربران
+        async function loadUsers() {
+            try {
+                const res = await fetch('http://localhost:5000/api/users');
+                if (!res.ok) throw new Error('خطا در دریافت کاربران');
+                const users = await res.json();
+                const tbody = document.getElementById('users-table-body');
+                tbody.innerHTML = '';
+                users.forEach(u => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${u.id}</td>
+                        <td>${u.username}</td>
+                        <td>${u.email}</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-delete-user" data-id="${u.id}">حذف</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                document.querySelectorAll('.btn-delete-user').forEach(btn => {
+                    btn.addEventListener('click', async function() {
+                        if (!confirm('آیا برای حذف این کاربر مطمئن هستید؟')) return;
+                        const id = this.getAttribute('data-id');
+                        try {
+                            const r = await fetch(`http://localhost:5000/api/users/${id}`, { method: 'DELETE' });
+                            if (r.ok) {
+                                alert('کاربر حذف شد');
+                                loadUsers();
+                            } else {
+                                let text = await r.text();
+                                let json;
+                                try { json = JSON.parse(text); } catch { json = { message: text } }
+                                alert(json.message || 'خطا در حذف کاربر');
+                            }
+                        } catch (err) {
+                            alert('خطا در ارتباط با سرور');
+                        }
+                    });
+                });
+            } catch (err) {
+                console.error('loadUsers error', err);
+            }
+        }
     </script>
 </body>
 </html> 
